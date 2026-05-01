@@ -1,6 +1,9 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from services.ollama_service import generate_story, compress_summary
+from services.ollama_service import (
+    generate_story, compress_summary,
+    get_default_model, get_models_for_ui,
+)
 from services.wp_service import update_player, delete_player
 from services.context_service import list_files as list_context_files
 from prompts import (
@@ -8,23 +11,15 @@ from prompts import (
     build_advance_prompt, build_theme_transition_prompt,
     get_system_prompt, TEXT_LENGTHS, THEMES,
 )
-from config import OLLAMA_MODEL
+from config import AI_PROVIDER
 
 _XP_PER_ACTION       = 10
 _XP_PER_LEVEL        = 100
 _MAX_SUMMARY_LEN     = 1500
 _MAX_RECENT          = 6
-_COMPRESS_EVERY      = 5    # comprimir resumen cada N acciones
+_COMPRESS_EVERY      = 5
 _BTN_MAX_CHARS       = 55
 _CHOICE_EMOJI        = ["①", "②", "③"]
-
-AVAILABLE_MODELS = {
-    "llama3.1:8b":  "🦙 Llama 3.1 8b (actual)",
-    "qwen2.5:7b":   "🌟 Qwen 2.5 7b (recomendado)",
-    "qwen2.5:3b":   "⚡ Qwen 2.5 3b (rápido)",
-    "mistral:7b":   "🌀 Mistral 7b",
-    "gemma2:9b":    "💎 Gemma 2 9b (mejor calidad)",
-}
 
 
 def _truncate(text: str, limit: int = _BTN_MAX_CHARS) -> str:
@@ -35,7 +30,7 @@ def _truncate(text: str, limit: int = _BTN_MAX_CHARS) -> str:
 
 
 def _get_model(player: dict) -> str:
-    return player.get("model", OLLAMA_MODEL)
+    return player.get("model", get_default_model())
 
 
 def _get_system(player: dict) -> str:
@@ -191,7 +186,7 @@ async def handle_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     inv_text     = "\n".join(f"  • {i}" for i in inv) if inv else "  • Vacío"
     theme_label  = THEMES.get(player.get("theme", "fantasy"), {}).get("label", "?")
     length_label = TEXT_LENGTHS.get(player.get("text_length", "normal"), {}).get("label", "?")
-    model_label  = AVAILABLE_MODELS.get(player.get("model", OLLAMA_MODEL), player.get("model", OLLAMA_MODEL))
+    model_label  = get_models_for_ui().get(player.get("model", get_default_model()), player.get("model", "?"))
     ctx_key      = player.get("context_key", "")
     ctx_label    = ctx_key.replace("_", " ").title() if ctx_key else "ninguno"
 
@@ -281,19 +276,21 @@ async def handle_change_model(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.answer()
 
     player        = context.user_data.get("player", {})
-    current_model = player.get("model", OLLAMA_MODEL)
+    current_model = player.get("model", get_default_model())
+    models        = get_models_for_ui()
+    provider_label = "☁️ Groq (nube)" if AI_PROVIDER == "groq" else "🖥️ Ollama (local)"
 
     keyboard = [
         [InlineKeyboardButton(
             f"{'✅ ' if k == current_model else ''}{v}",
             callback_data=f"setmodel_{k}",
         )]
-        for k, v in AVAILABLE_MODELS.items()
+        for k, v in models.items()
     ]
+    hint = ("💡 Modelos gratuitos en la nube" if AI_PROVIDER == "groq"
+            else "💡 Para instalar: ollama pull <nombre>")
     await query.edit_message_text(
-        "🤖 Elige el modelo de IA:\n\n"
-        "💡 Recomendado: Qwen 2.5 7b\n"
-        "Para instalarlo: ollama pull qwen2.5:7b",
+        f"🤖 Proveedor: {provider_label}\n{hint}",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
