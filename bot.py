@@ -30,8 +30,18 @@ async def _route_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
+    import os
+    # Debug: mostrar qué variables están disponibles (sin mostrar valores)
+    vars_check = ["TELEGRAM_TOKEN", "AI_PROVIDER", "GROQ_API_KEY", "GROQ_MODEL",
+                  "OLLAMA_URL", "WP_URL", "WP_USER", "WP_APP_PASSWORD"]
+    print("=== Variables de entorno ===")
+    for v in vars_check:
+        val = os.getenv(v)
+        print(f"  {v}: {'✅ OK' if val else '❌ FALTA'}")
+    print("===========================")
+
     if not TELEGRAM_TOKEN:
-        raise RuntimeError("Falta TELEGRAM_TOKEN en el archivo .env")
+        raise RuntimeError("Falta TELEGRAM_TOKEN — agregala en Railway > Variables")
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
