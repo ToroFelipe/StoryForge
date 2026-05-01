@@ -1,0 +1,22 @@
+# Contexto: Reino de Valdris (Fantasía personalizada)
+
+## El mundo
+- Valdris es un continente dividido en 5 reinos que llevan 200 años en una paz frágil.
+- La magia existe pero es escasa: solo 1 de cada 500 personas nace con el don.
+- Los que tienen magia son llamados "Marcados" y son temidos o reverenciados según la región.
+
+## Facciones principales
+- **El Imperio de Solaris**: reino más poderoso, intolerante con los Marcados.
+- **La República de Keth**: ciudad-estado comercial, neutral en conflictos.
+- **Los Hijos del Bosque**: comunidades nómadas que veneran la magia natural.
+- **La Orden Gris**: organización secreta que recluta Marcados para propósitos desconocidos.
+
+## Reglas del mundo
+- La moneda es el "Sello de Cobre/Plata/Oro".
+- Los viajes entre ciudades toman días o semanas a caballo.
+- La tecnología es medieval: no hay pólvora, no hay máquinas de vapor.
+- Los muertos a veces regresan como "Ecos" si murieron con mucho rencor.
+
+## Tono
+- Oscuro y político. Las decisiones tienen consecuencias reales.
+- Los héroes no siempre ganan. Los villanos tienen motivaciones válidas.

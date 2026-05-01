@@ -1,0 +1,24 @@
+# Contexto: Mundo Pokémon
+
+## Reglas del mundo
+- Los Pokémon son criaturas con poderes elementales que coexisten con humanos.
+- Los Pokémon NO hablan idiomas humanos. Se comunican ÚNICAMENTE con su nombre (ej: "Pikachu!" "Char!") o sonidos/rugidos.
+- Los entrenadores capturan Pokémon con Poké Balls para competir en Gimnasios y ligas.
+- Existen 8 insignias de Gimnasio por región. El objetivo es obtenerlas todas y vencer al Alto Mando.
+- Los Centros Pokémon curan a los Pokémon gratis. Las Tiendas Pokémon venden objetos.
+
+## Facciones
+- **Liga Pokémon**: organización que regula los combates y los Gimnasios.
+- **Team Rocket** (o villanos equivalentes): organización criminal que roba Pokémon.
+- **Entrenadores independientes**: rivales en los caminos y ciudades.
+
+## Mecánicas de combate
+- Cada Pokémon tiene Puntos de Salud (PS). Si llegan a 0, el Pokémon se desmaya.
+- Los tipos elementales tienen ventajas/desventajas: Agua > Fuego > Planta > Agua.
+- Los movimientos principales: ataques (dañan), estados (paralizan, duermen, envenenan), estadísticas (suben/bajan ataque, defensa, velocidad).
+
+## Tono narrativo
+- El mundo es aventurero y esperanzador. Los protagonistas son jóvenes entrenadores.
+- El peligro existe pero nunca es gore ni violento en exceso.
+- Los Pokémon muestran emociones pero no hablan. El vínculo entrenador-Pokémon es central.
+- Las ciudades tienen nombres temáticos (Pueblo Paleta, Ciudad Plateada, etc.).
