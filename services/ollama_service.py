@@ -4,8 +4,11 @@ Soporta Ollama (local) y Groq (nube).
 El proveedor se elige con AI_PROVIDER en .env
 """
 import re
+import logging
 import httpx
 from config import AI_PROVIDER, OLLAMA_URL, OLLAMA_MODEL, GROQ_API_KEY, GROQ_MODEL
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_CHOICES = ["Explorar el área", "Hablar con alguien cercano", "Seguir el camino"]
 
@@ -43,12 +46,18 @@ async def generate_story(prompt: str, system: str, model: str = "") -> dict:
         else:
             raw = await _call_ollama(prompt, system, model)
         return _parse(raw)
-    except httpx.ConnectError:
-        return _error("⚠️ El proveedor de IA no responde. Verificá tu conexión.")
-    except httpx.TimeoutException:
+    except httpx.ConnectError as e:
+        logger.error("ConnectError con %s (modelo: %s): %s", AI_PROVIDER, model, e)
+        return _error("⚠️ No se pudo conectar al proveedor de IA.")
+    except httpx.TimeoutException as e:
+        logger.error("Timeout con %s (modelo: %s): %s", AI_PROVIDER, model, e)
         return _error("⏳ El narrador tardó demasiado. Intentá de nuevo.")
+    except httpx.HTTPStatusError as e:
+        logger.error("HTTP %s de %s: %s", e.response.status_code, AI_PROVIDER, e.response.text[:200])
+        return _error(f"⚠️ Error HTTP {e.response.status_code} del proveedor de IA.")
     except Exception as e:
-        return _error(f"⚠️ Error inesperado: {str(e)[:80]}")
+        logger.error("Error inesperado con %s: %s", AI_PROVIDER, e)
+        return _error(f"⚠️ Error: {str(e)[:80]}")
 
 
 async def compress_summary(summary: str, model: str = "") -> str:
@@ -93,15 +102,16 @@ async def _call_groq(prompt: str, system: str, model: str) -> str:
     if not GROQ_API_KEY:
         raise ValueError("GROQ_API_KEY no configurada en .env")
 
+    logger.info("Llamando Groq — modelo: %s", model)
     async with httpx.AsyncClient(timeout=60.0) as client:
         r = await client.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Authorization": f"Bearer {GROQ_API_KEY.strip()}",
                 "Content-Type":  "application/json",
             },
             json={
-                "model": model,
+                "model": model.strip(),
                 "messages": [
                     {"role": "system",  "content": system},
                     {"role": "user",    "content": prompt},
@@ -110,7 +120,14 @@ async def _call_groq(prompt: str, system: str, model: str) -> str:
                 "max_tokens":  1024,
             },
         )
+        if r.status_code == 401:
+            logger.error("Groq 401 — API key inválida o expirada")
+            raise httpx.HTTPStatusError("401 Unauthorized", request=r.request, response=r)
+        if r.status_code == 404:
+            logger.error("Groq 404 — modelo '%s' no existe", model)
+            raise httpx.HTTPStatusError("404 Model not found", request=r.request, response=r)
         r.raise_for_status()
+        logger.info("Groq respondió OK")
         return r.json()["choices"][0]["message"]["content"]
 
 
