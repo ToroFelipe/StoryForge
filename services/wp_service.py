@@ -1,8 +1,15 @@
+import logging
 import base64
 import httpx
 from config import WP_URL, WP_USER, WP_APP_PASSWORD
 
-_BASE = f"{WP_URL}/wp-json/storyforge/v1"
+logger = logging.getLogger(__name__)
+
+_BASE    = f"{WP_URL}/wp-json/storyforge/v1"
+_TIMEOUT = 15.0
+
+# Si WP no está disponible, los datos se guardan solo en memoria
+_WP_ENABLED = bool(WP_URL and WP_USER and WP_APP_PASSWORD)
 
 
 def _headers() -> dict:
@@ -14,27 +21,58 @@ def _headers() -> dict:
 
 
 async def get_player(telegram_id: int) -> dict | None:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        r = await client.get(f"{_BASE}/player/{telegram_id}", headers=_headers())
-        if r.status_code == 404:
-            return None
-        r.raise_for_status()
-        return r.json()
+    if not _WP_ENABLED:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            r = await client.get(f"{_BASE}/player/{telegram_id}", headers=_headers())
+            if r.status_code == 404:
+                return None
+            r.raise_for_status()
+            return r.json()
+    except httpx.TimeoutException:
+        logger.warning("WP timeout al buscar jugador %s — tratando como nuevo", telegram_id)
+        return None
+    except Exception as e:
+        logger.warning("WP error get_player: %s", e)
+        return None
 
 
 async def create_player(data: dict) -> bool:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        r = await client.post(f"{_BASE}/player", json=data, headers=_headers())
-        return r.is_success
+    if not _WP_ENABLED:
+        return True
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            r = await client.post(f"{_BASE}/player", json=data, headers=_headers())
+            return r.is_success
+    except Exception as e:
+        logger.warning("WP error create_player: %s", e)
+        return False
 
 
 async def update_player(telegram_id: int, data: dict) -> bool:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        r = await client.put(f"{_BASE}/player/{telegram_id}", json=data, headers=_headers())
-        return r.is_success
+    if not _WP_ENABLED:
+        return True
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            r = await client.put(
+                f"{_BASE}/player/{telegram_id}", json=data, headers=_headers()
+            )
+            return r.is_success
+    except Exception as e:
+        logger.warning("WP error update_player: %s", e)
+        return False
 
 
 async def delete_player(telegram_id: int) -> bool:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        r = await client.delete(f"{_BASE}/player/{telegram_id}", headers=_headers())
-        return r.is_success
+    if not _WP_ENABLED:
+        return True
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            r = await client.delete(
+                f"{_BASE}/player/{telegram_id}", headers=_headers()
+            )
+            return r.is_success
+    except Exception as e:
+        logger.warning("WP error delete_player: %s", e)
+        return False
