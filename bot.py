@@ -37,7 +37,11 @@ def main():
     print("=== Variables de entorno ===")
     for v in vars_check:
         val = os.getenv(v)
-        print(f"  {v}: {'✅ OK' if val else '❌ FALTA'}")
+        # Mostrar valor real para variables no sensibles
+        if v in ("AI_PROVIDER", "GROQ_MODEL", "OLLAMA_URL", "WP_URL"):
+            print(f"  {v}: {val or '❌ FALTA'}")
+        else:
+            print(f"  {v}: {'✅ OK' if val else '❌ FALTA'}")
     print("===========================")
 
     if not TELEGRAM_TOKEN:
