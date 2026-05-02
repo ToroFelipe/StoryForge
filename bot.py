@@ -6,6 +6,7 @@ from telegram.ext import (
     MessageHandler, filters, ContextTypes,
 )
 from config import TELEGRAM_TOKEN
+from services.db_service import init_db
 from handlers.start import get_start_handler
 from handlers.game import (
     handle_choice, handle_advance,
@@ -49,6 +50,9 @@ def main():
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+
+    db_ok = loop.run_until_complete(init_db())
+    print(f"  PostgreSQL: {'✅ conectado' if db_ok else '⚠️  modo memoria (sin DATABASE_URL)'}")
 
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 

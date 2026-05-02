@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import base64
 import httpx
@@ -6,7 +7,7 @@ from config import WP_URL, WP_USER, WP_APP_PASSWORD
 logger = logging.getLogger(__name__)
 
 _BASE    = f"{WP_URL}/wp-json/storyforge/v1"
-_TIMEOUT = 15.0
+_TIMEOUT = 30.0
 
 # Si WP no está disponible, los datos se guardan solo en memoria
 _WP_ENABLED = bool(WP_URL and WP_USER and WP_APP_PASSWORD)
@@ -49,23 +50,25 @@ async def get_player(telegram_id: int) -> dict | None:
         return None
 
 
-async def create_player(data: dict) -> bool:
-    if not _WP_ENABLED:
-        return True
+async def _create_player_bg(data: dict):
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             r = await client.post(f"{_BASE}/player", json=data, headers=_headers())
             if not r.is_success:
                 logger.warning("WP create_player HTTP %s: %s", r.status_code, r.text[:120])
-            return r.is_success
     except Exception as e:
         _log_wp_error("create_player", e)
-        return False
 
 
-async def update_player(telegram_id: int, data: dict) -> bool:
+async def create_player(data: dict) -> bool:
+    """Lanza el guardado en segundo plano para no bloquear al jugador."""
     if not _WP_ENABLED:
         return True
+    asyncio.create_task(_create_player_bg(data))
+    return True
+
+
+async def _update_player_bg(telegram_id: int, data: dict):
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             r = await client.put(
@@ -73,10 +76,16 @@ async def update_player(telegram_id: int, data: dict) -> bool:
             )
             if not r.is_success:
                 logger.warning("WP update_player HTTP %s: %s", r.status_code, r.text[:120])
-            return r.is_success
     except Exception as e:
         _log_wp_error("update_player", e)
-        return False
+
+
+async def update_player(telegram_id: int, data: dict) -> bool:
+    """Lanza el guardado en segundo plano para no bloquear al jugador."""
+    if not _WP_ENABLED:
+        return True
+    asyncio.create_task(_update_player_bg(telegram_id, data))
+    return True
 
 
 async def delete_player(telegram_id: int) -> bool:

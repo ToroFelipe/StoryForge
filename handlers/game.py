@@ -4,7 +4,7 @@ from services.ollama_service import (
     generate_story, compress_summary,
     get_default_model, get_models_for_ui,
 )
-from services.wp_service import update_player, delete_player
+from services.db_service import update_player, delete_player
 from services.context_service import list_files as list_context_files
 from prompts import (
     build_story_prompt, build_intro_prompt,

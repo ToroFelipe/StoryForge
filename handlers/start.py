@@ -7,7 +7,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     filters,
 )
-from services.wp_service import get_player, create_player
+from services.db_service import get_player, create_player
 from prompts import THEMES, TEXT_LENGTHS
 
 AWAITING_NAME         = 0
