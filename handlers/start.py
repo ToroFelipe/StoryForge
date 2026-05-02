@@ -165,4 +165,5 @@ def get_start_handler() -> ConversationHandler:
             AWAITING_TEXT_LENGTH:  [CallbackQueryHandler(receive_text_length, pattern=r"^length_")],
         },
         fallbacks=[CommandHandler("start", cmd_start)],
+        per_message=False,
     )
